@@ -1,0 +1,159 @@
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <algorithm>
+#include <random>
+#include <chrono>
+
+using namespace std;
+using namespace std::chrono;
+
+int main()
+{
+	auto start = high_resolution_clock::now();
+	ifstream inFile;
+	inFile.open("C:\\Users\\Julius\\Desktop\\wtatext.txt");
+	int x,linha,coluna,colunamax,colunamin,aux1,aux2,y,default_value,n,r;
+	default_value = 0;
+	inFile >> n;
+	vector<int> armas(n,0);
+	vector<int> alvos(n,0);
+	vector<int> posicao;
+	for (int k = 0; k < armas.size(); k++)
+	{
+		cout << armas[k] << endl;
+	}
+	vector<vector<float>> probabilidades(n, vector<float>(n, default_value));
+	cout << "Qunatidade de colunas: " << n << endl;
+	for (int i = 0; i < n; ++i)
+	{
+		inFile >> alvos[i];
+	}
+	for (int k = 0; k < alvos.size(); k++)
+	{
+		cout << alvos[k] << endl;
+	}
+
+	for (int i = 0; i < n; ++i)
+		for (int j = 0; j < n; ++j)
+			inFile >> probabilidades[i][j];
+
+	for (int k = 0; k < probabilidades.size(); k++)
+	{
+		for (int h = 0; h < probabilidades[k].size(); h++)
+		{
+			cout << "Porcentagens aqui: " <<probabilidades[k][h] << endl;
+		}
+	}
+	linha = 0;
+	coluna = 0;
+	float max,resultado,resultadofinal,min,alfa,lrcprob;
+	vector<float> probalvos;
+	vector<float> lrc;
+	vector<int> alvodaarma;
+	vector<int> colunadaarma;
+	vector<float> resultados;
+	resultado = 0;
+	alfa = 0.5;
+	max = 0;
+	min = 10;
+	y = 0;
+	bool colunavalida;
+	colunavalida = true;
+	int p;
+	p = 0;
+	while (p < 10)
+	{
+		posicao = vector<int>(n, 0);
+		for (linha = 0; linha < n; linha++)
+		{
+			for (coluna = 0; coluna < n; coluna++)
+			{
+
+				if (posicao[coluna] == 1)
+				{
+					continue;
+				}
+				if (max < probabilidades[linha][coluna])
+				{
+					max = probabilidades[linha][coluna];
+					colunamax = coluna;
+				}
+				if (min > probabilidades[linha][coluna])
+				{
+					min = probabilidades[linha][coluna];
+					colunamin = coluna;
+				}
+			}
+			lrcprob = min + alfa * (max - min);
+			for (int k = 0; k < probabilidades[0].size(); k++)
+			{
+				if (lrcprob <= probabilidades[linha][k] && posicao[k]==0)
+				{
+					lrc.push_back(k);
+				}
+			}
+			r = rand() % lrc.size();
+			colunamax = lrc[r];
+			posicao[colunamax] = 1;
+			max = probabilidades[linha][colunamax];
+			alvodaarma.push_back(alvos[colunamax]);
+			colunadaarma.push_back(colunamax);
+			probalvos.push_back(alvos[colunamax] * (1 - max));
+			resultado = resultado + alvos[colunamax] * (1 - max);
+			max = 0;
+			min = 10;
+			cout << "Resultado parcial: " << resultado << endl;
+			lrc.clear();
+		}
+		resultados.push_back(resultado);
+		x = 0;
+		cout << "Passei" << endl;
+		//swap comeca aqui
+		int bestx, bestlinha,i;
+		bool improvement = true;
+		while (improvement)
+		{
+			improvement = false;
+			bestx = -1;
+			for (x = 0; x < n - 1; x++)
+			{
+				for (linha = x + 1; linha < n; linha++)
+				{
+					aux1 = colunadaarma[linha];
+					aux2 = colunadaarma[x];
+					resultadofinal = resultado - probalvos[x] + alvodaarma[linha] * (1 - probabilidades[x][aux1]);
+					cout << "Teste 1: " << resultadofinal << endl;
+					resultadofinal = (resultadofinal - probalvos[linha]) + alvodaarma[x] * (1 - probabilidades[linha][aux2]);
+					cout << "Teste 2: " << resultadofinal << endl;
+					if (resultadofinal < resultado)
+					{
+						resultado = resultadofinal;
+						//resultados.push_back(resultado);
+						bestx = x;
+						bestlinha = linha;
+						improvement = true;
+					}
+					cout << "Resultado Final: " << resultado << endl;
+				}
+			}
+			if (improvement)
+			{
+				swap(alvodaarma[bestx], alvodaarma[bestlinha]);
+				probalvos[bestx] = alvodaarma[bestlinha] * (1 - probabilidades[bestx][aux1]);
+				probalvos[bestlinha] = alvodaarma[bestx] * (1 - probabilidades[bestlinha][aux2]);
+			}
+		}
+		colunadaarma.clear();
+		probalvos.clear();
+		alvodaarma.clear();
+		p++;
+		resultado = 0;
+	}
+	auto stop = high_resolution_clock::now();
+	auto duration = duration_cast<milliseconds>(stop - start);
+	cout << "Tempo total: " << duration.count() << " milissegundos." << endl;
+	inFile.close();
+	return 1;
+}
