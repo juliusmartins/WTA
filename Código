@@ -14,16 +14,12 @@ int main()
 	auto start = high_resolution_clock::now();
 	ifstream inFile;
 	inFile.open("C:\\Users\\Julius\\Desktop\\wtatext.txt");
-	int x,linha,coluna,colunamax,colunamin,aux1,aux2,y,default_value,n,r;
+	int x,linha,coluna,colunamax,colunamin,aux1,aux2,default_value,n,r;
 	default_value = 0;
 	inFile >> n;
 	vector<int> armas(n,0);
 	vector<int> alvos(n,0);
 	vector<int> posicao;
-	for (int k = 0; k < armas.size(); k++)
-	{
-		cout << armas[k] << endl;
-	}
 	vector<vector<float>> probabilidades(n, vector<float>(n, default_value));
 	cout << "Qunatidade de colunas: " << n << endl;
 	for (int i = 0; i < n; ++i)
@@ -48,7 +44,7 @@ int main()
 	}
 	linha = 0;
 	coluna = 0;
-	float max,resultado,resultadofinal,min,alfa,lrcprob;
+	float max,resultado,resultadofinal,resultadoparcial,min,alfa,lrcprob,melhorresultado;
 	vector<float> probalvos;
 	vector<float> lrc;
 	vector<int> alvodaarma;
@@ -58,9 +54,7 @@ int main()
 	alfa = 0.5;
 	max = 0;
 	min = 10;
-	y = 0;
-	bool colunavalida;
-	colunavalida = true;
+	melhorresultado = 5000;
 	int p;
 	p = 0;
 	while (p < 10)
@@ -108,6 +102,7 @@ int main()
 			lrc.clear();
 		}
 		resultados.push_back(resultado);
+		resultadoparcial = resultado;
 		x = 0;
 		cout << "Passei" << endl;
 		//swap comeca aqui
@@ -123,13 +118,15 @@ int main()
 				{
 					aux1 = colunadaarma[linha];
 					aux2 = colunadaarma[x];
+					//cout << "Meu alvo: " << aux2 << endl;
+					//cout << "Alvo dele: " << aux1 << endl;
 					resultadofinal = resultado - probalvos[x] + alvodaarma[linha] * (1 - probabilidades[x][aux1]);
-					cout << "Teste 1: " << resultadofinal << endl;
+					//cout << "Teste 1: " << resultadofinal << endl;
 					resultadofinal = (resultadofinal - probalvos[linha]) + alvodaarma[x] * (1 - probabilidades[linha][aux2]);
-					cout << "Teste 2: " << resultadofinal << endl;
-					if (resultadofinal < resultado)
+					//cout << "Teste 2: " << resultadofinal << endl;
+					if (resultadofinal < resultadoparcial)
 					{
-						resultado = resultadofinal;
+						resultadoparcial = resultadofinal;
 						//resultados.push_back(resultado);
 						bestx = x;
 						bestlinha = linha;
@@ -140,9 +137,23 @@ int main()
 			}
 			if (improvement)
 			{
+				resultado = resultadoparcial;
+				if (resultado < melhorresultado)
+				{
+					melhorresultado = resultado;
+				}
+				probalvos[bestx] = alvodaarma[bestlinha] * (1 - probabilidades[bestx][colunadaarma[bestlinha]]);
+				//cout << "Posicao de x: " << bestx << endl;
+				//cout << "Novo valor de x: " << probalvos[bestx] << endl;
+				probalvos[bestlinha] = alvodaarma[bestx] * (1 - probabilidades[bestlinha][colunadaarma[bestx]]);
+				//cout << "Posicao de linha: " << bestlinha << endl;
+				//cout << "Novo valor de linha: " << probalvos[bestlinha] << endl;
 				swap(alvodaarma[bestx], alvodaarma[bestlinha]);
-				probalvos[bestx] = alvodaarma[bestlinha] * (1 - probabilidades[bestx][aux1]);
-				probalvos[bestlinha] = alvodaarma[bestx] * (1 - probabilidades[bestlinha][aux2]);
+				swap(colunadaarma[bestx], colunadaarma[bestlinha]);
+				//cout << "Pos troca alvo 1: " << alvodaarma[bestx] << endl;
+				//cout << "Pos troca coluna 1: " << colunadaarma[bestx] << endl;
+				//cout << "Pos troca alvo 2: " << alvodaarma[bestlinha] << endl;
+				//cout << "Pos troca coluna 2: " << colunadaarma[bestlinha] << endl;
 			}
 		}
 		colunadaarma.clear();
@@ -154,6 +165,7 @@ int main()
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	cout << "Tempo total: " << duration.count() << " milissegundos." << endl;
+	cout << "Melhor resultado: " << melhorresultado << endl;
 	inFile.close();
 	return 1;
 }
